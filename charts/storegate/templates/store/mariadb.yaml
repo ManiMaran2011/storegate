@@ -1,0 +1,100 @@
+{{- $ns := .Values.namespaces.store -}}
+{{- $m := .Values.store.mariadb -}}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: mariadb
+  namespace: {{ $ns }}
+automountServiceAccountToken: false
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mariadb
+  namespace: {{ $ns }}
+  labels:
+    {{- include "storegate.labels" (dict "root" . "component" "database" "name" "mariadb") | nindent 4 }}
+spec:
+  selector:
+    {{- include "storegate.selector" (dict "name" "mariadb") | nindent 4 }}
+  ports:
+    - {name: mysql, port: 3306, targetPort: mysql}
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mariadb
+  namespace: {{ $ns }}
+  labels:
+    {{- include "storegate.labels" (dict "root" . "component" "database" "name" "mariadb") | nindent 4 }}
+spec:
+  serviceName: mariadb
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "storegate.selector" (dict "name" "mariadb") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "storegate.labels" (dict "root" . "component" "database" "name" "mariadb") | nindent 8 }}
+    spec:
+      serviceAccountName: mariadb
+      automountServiceAccountToken: false
+      {{- include "storegate.imagePullSecrets" . | nindent 6 }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
+        seccompProfile: {type: RuntimeDefault}
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: mariadb
+          image: {{ $m.image }}
+          imagePullPolicy: IfNotPresent
+          args: [--character-set-server=utf8mb4, --collation-server=utf8mb4_unicode_ci]
+          ports:
+            - {name: mysql, containerPort: 3306}
+          env:
+            - name: MARIADB_ROOT_PASSWORD
+              valueFrom: {secretKeyRef: {name: mariadb-credentials, key: root-password}}
+            - name: MARIADB_DATABASE
+              value: wordpress
+            - name: MARIADB_USER
+              value: wordpress
+            - name: MARIADB_PASSWORD
+              valueFrom: {secretKeyRef: {name: mariadb-credentials, key: password}}
+          startupProbe:
+            exec: {command: [healthcheck.sh, --connect, --innodb_initialized]}
+            periodSeconds: 5
+            failureThreshold: 60
+          livenessProbe:
+            exec: {command: [healthcheck.sh, --connect]}
+            periodSeconds: 20
+            timeoutSeconds: 5
+          readinessProbe:
+            exec: {command: [healthcheck.sh, --connect, --innodb_initialized]}
+            periodSeconds: 10
+            timeoutSeconds: 5
+          resources:
+            {{- toYaml $m.resources | nindent 12 }}
+          # The database image writes its socket and temp files outside the data volume, so its root
+          # filesystem stays writable. Everything else about it is locked down.
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            capabilities: {drop: [ALL]}
+            seccompProfile: {type: RuntimeDefault}
+          volumeMounts:
+            - {name: data, mountPath: /var/lib/mysql}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: [ReadWriteOnce]
+        {{- with $m.storageClassName }}
+        storageClassName: {{ . }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ $m.storage }}

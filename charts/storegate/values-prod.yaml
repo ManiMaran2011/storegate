@@ -1,0 +1,42 @@
+# Single-node k3s VPS with Traefik and cert-manager. Differences from values-local.yaml:
+#   * real domains + TLS, secure cookies
+#   * generated secrets (nothing predictable), larger volumes and limits
+#   * the malicious fixture is not deployed
+# Replace the example domains before installing, or pass --set ingress.host=... --set ingress.shopHost=...
+ingress:
+  className: traefik
+  controllerNamespace: kube-system
+  host: storegate.example.com
+  shopHost: shop.example.com
+  scheme: https
+  tls:
+    enabled: true
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  gatewayAnnotations: {}
+image:
+  registry: ghcr.io/REPLACE_ME
+  tag: "1.0.0"
+  pullPolicy: IfNotPresent
+store:
+  mariadb:
+    storage: 10Gi
+    resources:
+      requests: {cpu: 200m, memory: 512Mi}
+      limits: {cpu: "1", memory: 1Gi}
+  wordpress:
+    storage: 10Gi
+    resources:
+      requests: {cpu: 300m, memory: 512Mi}
+      limits: {cpu: "1500m", memory: 1536Mi}
+platform:
+  postgres:
+    storage: 5Gi
+  gateway:
+    cookieSecure: true
+    replicas: 2
+    resources:
+      requests: {cpu: 150m, memory: 192Mi}
+      limits: {cpu: "1", memory: 512Mi}
+  evil:
+    enabled: false

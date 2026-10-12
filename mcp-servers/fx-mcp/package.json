@@ -1,0 +1,27 @@
+{
+  "name": "@storegate/fx-mcp",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Currency conversion MCP server (sample FX table)",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "@storegate/mcp-kit": "*",
+    "zod": "^4.6.5"
+  },
+  "exports": {
+    ".": "./dist/index.js",
+    "./tools": {
+      "types": "./dist/tools.d.ts",
+      "default": "./dist/tools.js"
+    }
+  }
+}

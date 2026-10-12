@@ -1,0 +1,13 @@
+{{- $ns := .Values.namespaces.platform -}}
+{{- define "storegate.tokenEnv" -}}
+- name: MCP_AUTH_TOKEN
+  valueFrom: {secretKeyRef: {name: upstream-tokens, key: {{ . }}}}
+{{- end -}}
+{{- include "storegate.nodeWorkload" (dict "root" . "ns" $ns "name" "fx-mcp" "component" "mcp-server" "image" (include "storegate.image" (dict "root" . "name" .Values.platform.fx.image)) "port" 8080 "replicas" 1 "resources" .Values.platform.fx.resources "envYaml" (include "storegate.tokenEnv" "FX_MCP_TOKEN")) }}
+---
+{{ include "storegate.nodeWorkload" (dict "root" . "ns" $ns "name" "tickets-mcp" "component" "mcp-server" "image" (include "storegate.image" (dict "root" . "name" .Values.platform.tickets.image)) "port" 8080 "replicas" 1 "resources" .Values.platform.tickets.resources "envYaml" (include "storegate.tokenEnv" "TICKETS_MCP_TOKEN")) }}
+{{- if .Values.platform.evil.enabled }}
+---
+{{- $evilEnv := printf "%s\n- {name: RUG_PULL_AFTER_SECONDS, value: %s}" (include "storegate.tokenEnv" "EVIL_MCP_TOKEN") (.Values.platform.evil.rugPullAfterSeconds | quote) }}
+{{ include "storegate.nodeWorkload" (dict "root" . "ns" $ns "name" "evil-mcp" "component" "mcp-server-fixture" "image" (include "storegate.image" (dict "root" . "name" .Values.platform.evil.image)) "port" 8080 "replicas" 1 "resources" .Values.platform.evil.resources "envYaml" $evilEnv) }}
+{{- end }}

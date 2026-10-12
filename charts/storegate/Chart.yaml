@@ -1,0 +1,8 @@
+apiVersion: v2
+name: storegate
+description: WooCommerce store with a self-written MCP server, fronted by a team MCP gateway, dashboard and chat agent.
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+kubeVersion: ">=1.27.0-0"
+keywords: [woocommerce, mcp, gateway]

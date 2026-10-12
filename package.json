@@ -1,0 +1,28 @@
+{
+  "name": "storegate",
+  "version": "1.0.0",
+  "private": true,
+  "description": "WooCommerce hosting on Kubernetes with a team MCP gateway, dashboard and chat agent",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*",
+    "mcp-servers/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @storegate/mcp-kit && npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "lint:charts": "node scripts/render-charts.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.3",
+    "yaml": "^2.9.1"
+  }
+}

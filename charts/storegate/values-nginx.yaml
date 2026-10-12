@@ -1,0 +1,8 @@
+# Overlay for clusters that use ingress-nginx (kind, minikube). Layer it after values-local.yaml:
+#   helm upgrade --install storegate charts/storegate -f charts/storegate/values-local.yaml -f charts/storegate/values-nginx.yaml
+ingress:
+  className: nginx
+  controllerNamespace: ingress-nginx
+  gatewayAnnotations:
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"
