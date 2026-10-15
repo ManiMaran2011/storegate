@@ -56,6 +56,8 @@ make demo    # creates an admin and a member, mints API keys, writes .demo/crede
 
 **Why k3d rather than kind?** k3d runs k3s, so Traefik and the NetworkPolicy engine are the same as on the VPS. With kind the default CNI may not enforce NetworkPolicies. kind and minikube still work: add `-f charts/storegate/values-nginx.yaml` and install ingress-nginx (`make deploy HELM_SET="-f charts/storegate/values-nginx.yaml"`).
 
+**Demo** : https://drive.google.com/file/d/1SbWgjCL9CyPJNkCh7eHuiuooTZ5zDTci/view?usp=sharing
+
 ### Enable the chat assistant
 
 The assistant works with any OpenAI-compatible provider. Groq's free tier is the default; OpenAI works too:
